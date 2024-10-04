@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isolateur Audio/Vidéo en Temps Réel</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+  }
+  h1 {
+    color: #333;
+    text-align: center;
+  }
+  #media-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #000;
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #video-player, #audio-player {
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+  .input-group {
+    margin-bottom: 15px;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  input[type="file"], input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  #loading-spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    display: none;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Isolateur Audio/Vidéo en Temps Réel</h1>
+    
+    <div id="media-container">
+      <video id="video-player" controls>
+        Votre navigateur ne supporte pas la balise vidéo.
+      </video>
+      <audio id="audio-player" controls>
+        Votre navigateur ne supporte pas la balise audio.
+      </audio>
+      <div id="loading-spinner"></div>
+    </div>
+    
+    <div class="input-group">
+      <label for="file-upload">Télécharger une vidéo ou un audio :</label>
+      <input type="file" id="file-upload" accept="video/*,audio/*">
+    </div>
+    
+    <div class="input-group">
+      <label for="link-input">Ou entrez un lien YouTube, Instagram ou Facebook :</label>
+      <input type="text" id="link-input" placeholder="https://www.youtube.com/watch?v=...">
+      <button id="validate-link">Valider le lien</button>
+    </div>
+  </div>
+
+  <script>
+    const fileUpload = document.getElementById('file-upload');
+    const linkInput = document.getElementById('link-input');
+    const validateLinkButton = document.getElementById('validate-link');
+    const videoPlayer = document.getElementById('video-player');
+    const audioPlayer = document.getElementById('audio-player');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const mediaContainer = document.getElementById('media-container');
+
+    fileUpload.addEventListener('change', handleFileUpload);
+    validateLinkButton.addEventListener('click', handleLinkValidation);
+
+    function showLoadingSpinner() {
+      loadingSpinner.style.display = 'block';
+      videoPlayer.style.display = 'none';
+      audioPlayer.style.display = 'none';
+    }
+
+    function hideLoadingSpinner() {
+      loadingSpinner.style.display = 'none';
+    }
+
+    function showMedia(type, url) {
+      if (type === 'video') {
+        videoPlayer.src = url;
+        videoPlayer.style.display = 'block';
+        audioPlayer.style.display = 'none';
+      } else if (type === 'audio') {
+        audioPlayer.src = url;
+        audioPlayer.style.display = 'block';
+        videoPlayer.style.display = 'none';
+      }
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showLoadingSpinner();
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        hideLoadingSpinner();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          const fileUrl = data.file_url;
+          if (file.type.startsWith('video')) {
+            showMedia('video', fileUrl);
+          } else if (file.type.startsWith('audio')) {
+            showMedia('audio', fileUrl);
+          }
+        }
+      })
+      .catch(error => {
+        hideLoadingSpinner();
+        console.error('Erreur:', error);
+      });
+    }
+
+    function handleLinkValidation() {
+      const link = linkInput.value;
+      if (!link) return;
+
+      showLoadingSpinner();
+
+      fetch('/process_link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ link: link })
+      })
+      .then(response => response.json())
+      .then(data => {
+        hideLoadingSpinner();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          const fileUrl = data.file_url;
+          // Déterminer si c'est une vidéo ou un audio en fonction de l'extension
+          if (fileUrl.endsWith('.mp4')) {
+            showMedia('video', fileUrl);
+          } else if (fileUrl.endsWith('.wav')) {
+            showMedia('audio', fileUrl);
+          }
+        }
+      })
+      .catch(error => {
+        hideLoadingSpinner();
+        console.error('Erreur:', error);
+      });
+    }
+  </script>
+</body>
+</html>
