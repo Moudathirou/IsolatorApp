@@ -21,14 +21,16 @@
 
    ```bash
    git clone https://github.com/Moudathirou/IsolatorApp__.git
-   cd IsolatorApp__```
+   cd IsolatorApp__
 2. Installez les dépendances :
    
    ```bash
-   pip install -r requirements.txt ```
+   pip install -r requirements.txt 
 
+   
 3. Lancez l'outil :
 
+   ```bash
    python main.py
 
 4. clé api Elevenlabs :
