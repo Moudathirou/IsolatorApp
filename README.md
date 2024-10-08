@@ -20,5 +20,23 @@
 1. Clonez le dépôt :
 
    ```bash
-   git clone https://github.com/username/audio-separator-tool.git
-   cd audio-separator-tool
+   git clone https://github.com/Moudathirou/IsolatorApp__.git
+   cd IsolatorApp__
+2. Installez les dépendances :
+
+```bash
+
+pip install -r requirements.txt
+
+3. Lancez l'outil :
+
+```bash
+
+python main.py
+
+4. clé api Elevenlabs :
+
+```bash
+
+Vous avez besoin de la clé API de Elevenlabs
+
