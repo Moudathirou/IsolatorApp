@@ -24,19 +24,13 @@
    cd IsolatorApp__
 2. Installez les dépendances :
 
-```bash
-
 pip install -r requirements.txt
 
 3. Lancez l'outil :
 
-```bash
-
 python main.py
 
 4. clé api Elevenlabs :
-
-```bash
 
 Vous avez besoin de la clé API de Elevenlabs
 
